@@ -1,10 +1,5 @@
-Here is a `README.md` file that summarizes the concepts of integrating Auth0 with Next.js based on the details you provided:
-
----
-
 # Next.js + Auth0 Integration
-
-This project demonstrates how to integrate **Auth0** with **Next.js** for user authentication and route protection.
+This project is the simplest way to  integrate **Auth0** with **Next.js** for user authentication and route protection. 
 
 ## Table of Contents
 
@@ -68,6 +63,90 @@ Replace the placeholders with your actual Auth0 application values.
    - `/api/auth/logout`: Logs the user out.
    - `/api/auth/callback`: The callback route where Auth0 redirects after login.
    - `/api/auth/me`: Fetches the authenticated user profile.
+  
+## Add the provider in layout to access the session data all over the app
+```js
+
+import { UserProvider } from '@auth0/nextjs-auth0/client'
+
+export default function RootLayout({children,}: Readonly<{children: React.ReactNode }>) {
+  return (
+    <html lang="en">
+      <head>
+        <link rel="icon" href="./favicon.png" sizes="any" />
+      </head>
+      <body >
+        <UserProvider>
+
+            {children}
+
+        </UserProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+
+## Fetching User Data
+
+You can fetch user data either on the **client side** or the **server side**.
+
+### Client-side
+
+For client-side user data fetching, use the `useUser` hook:
+
+```tsx
+"use client";
+
+import { useUser } from "@auth0/nextjs-auth0/client";
+
+const ProfileClient = () => {
+  const { user, error, isLoading } = useUser();
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>{error.message}</div>;
+
+  return user ? (
+    <div>
+      <img src={user.picture} alt={user.name} />
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+    </div>
+  ) : (
+    <div>No user logged in</div>
+  );
+};
+
+export default ProfileClient;
+```
+
+### Server-side
+
+For server-side data fetching, you can use `getSession`:
+
+```tsx
+import { getSession } from "@auth0/nextjs-auth0";
+
+const ProfileServer = async () => {
+  const session = await getSession();
+  const user = session?.user;
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div>
+      <img src={user.picture} alt={user.name} />
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+    </div>
+  );
+};
+
+export default ProfileServer;
+```
 
 ## Protecting Routes
 
@@ -133,65 +212,6 @@ const AuthProtected: NextPage = withPageAuthRequired(async () => {
 export default AuthProtected;
 ```
 
-## Fetching User Data
-
-You can fetch user data either on the **client side** or the **server side**.
-
-### Client-side
-
-For client-side user data fetching, use the `useUser` hook:
-
-```tsx
-"use client";
-
-import { useUser } from "@auth0/nextjs-auth0/client";
-
-const ProfileClient = () => {
-  const { user, error, isLoading } = useUser();
-
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>{error.message}</div>;
-
-  return user ? (
-    <div>
-      <img src={user.picture} alt={user.name} />
-      <h2>{user.name}</h2>
-      <p>{user.email}</p>
-    </div>
-  ) : (
-    <div>No user logged in</div>
-  );
-};
-
-export default ProfileClient;
-```
-
-### Server-side
-
-For server-side data fetching, you can use `getSession`:
-
-```tsx
-import { getSession } from "@auth0/nextjs-auth0";
-
-const ProfileServer = async () => {
-  const session = await getSession();
-  const user = session?.user;
-
-  if (!user) {
-    return null;
-  }
-
-  return (
-    <div>
-      <img src={user.picture} alt={user.name} />
-      <h2>{user.name}</h2>
-      <p>{user.email}</p>
-    </div>
-  );
-};
-
-export default ProfileServer;
-```
 
 ## Conclusion
 
